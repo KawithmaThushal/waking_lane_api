@@ -6,20 +6,18 @@ using waking_lane_api.Models;
 using MySql.Data.MySqlClient;
 using System.Data;
 
-
 namespace waking_lane_api.Helpers
 {
-    public class WalkingLaneDbHelper
+    public class AdminIssuedIDlistDBHelper
     {
         private Connection_Main connection_Main;
         private MySqlConnection con;
 
-
-        public WalkingPlaceReturnInfo GetWorkingPlaceList(LocationInfo obj)
+        public AdminIssuedIDlistOutput GetAdminIssuedIDlist(AdminIssuedIDlistInput obj)
         {
-            WalkingPlaceReturnInfo rinfo = new WalkingPlaceReturnInfo();
-            List<Walking_Place> list = new List<Walking_Place>();
-//1
+            AdminIssuedIDlistOutput rinfo = new AdminIssuedIDlistOutput();
+            List<AdminIssuedIDlistDisplay> list = new List<AdminIssuedIDlistDisplay>();
+            //1
             if (obj.ClientID == null || obj.ClientID == "")
             {
                 rinfo.ReturnInfo.ReturnValue = "error";
@@ -51,7 +49,7 @@ namespace waking_lane_api.Helpers
                     {
                         //method body
 
-                        string sql = "SELECT * FROM tbl_walkinglane;";
+                        string sql = "SELECT twa.Applicant_full_Name, NIC_no, Paid_date, twid.Issue_date_time, twa.ID  FROM tbl_walkinglane_applicant AS twa  INNER JOIN tbl_walkinglane_issued_details AS twid  ON twa.ID = twid.Applicant_index_No  WHERE twid.Issue_date_time BETWEEN '" + obj.FromDate + "' AND '" + obj.ToDate + "';";
                         MySqlDataAdapter da = new MySqlDataAdapter(sql, this.con);
                         DataSet ds = new DataSet();
                         da.Fill(ds, "btDT");
@@ -62,10 +60,15 @@ namespace waking_lane_api.Helpers
                             rinfo.ReturnInfo.ReturnMessage = "result found";
                             foreach (DataRow r in dt1.Rows)
                             {
-                                Walking_Place sec = new Walking_Place();
-                                sec.Walking_Id = int.Parse(r["walking_id"].ToString());
-                                sec.Walking_Name = r["walking_name"].ToString();
-                                sec.Place = r["Place"].ToString();
+                                AdminIssuedIDlistDisplay sec = new AdminIssuedIDlistDisplay();
+
+                                sec.ApplicantFullName = r["Applicant_full_Name"].ToString();
+                                sec.ApplicantNICno = r["NIC_no"].ToString();
+                                sec.PaidDate = r["Paid_date"].ToString();
+                                sec.IDIssueDateTime = r["Issue_date_time"].ToString();
+                                sec.ID = r["ID"].ToString();
+
+
                                 list.Add(sec);
                             }
 
@@ -73,7 +76,7 @@ namespace waking_lane_api.Helpers
                         else
                         {
                             rinfo.ReturnInfo.ReturnValue = "error";
-                            rinfo.ReturnInfo.ReturnMessage = "Invalid Reference ID";
+                            rinfo.ReturnInfo.ReturnMessage = "Invalid Date";
                         }
                         //---------------
                     }
@@ -81,15 +84,9 @@ namespace waking_lane_api.Helpers
 
             }
 
-            rinfo.ListWalking_Place = list;
+            rinfo.IssuedIDlist = list;
             return rinfo;
         }
-
-
-
-
-
-
 
     }
 }
